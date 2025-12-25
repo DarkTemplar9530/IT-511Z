@@ -647,8 +647,7 @@ function renderReportTable() {
             blockDiv.className = 'semester-block';
             
             const header = document.createElement('div');
-            header.className = 'semester-header active'; // Изначально открыт
-            // Добавлена стрелочка SVG
+            header.className = 'semester-header active';
             header.innerHTML = `
                 <span>${course} КУРС, ${semester} СЕМЕСТР</span>
                 <svg class="semester-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
@@ -675,7 +674,6 @@ function renderReportTable() {
                 nameSpan.textContent = sub.name;
                 nameContainer.appendChild(nameSpan);
 
-                // Если есть инфо о преподе И режим "Только долги" - показываем кнопку
                 if (sub.info && viewMode === 'debts') {
                     const infoBtn = document.createElement('button');
                     infoBtn.className = 'info-btn';
@@ -703,7 +701,6 @@ function renderReportTable() {
                 mainRow.appendChild(gradeSpan);
                 row.appendChild(mainRow);
 
-                // Панель с информацией (только для режима долгов)
                 if (sub.info && viewMode === 'debts') {
                     const infoPanel = document.createElement('div');
                     infoPanel.className = 'teacher-info-panel';
@@ -719,7 +716,6 @@ function renderReportTable() {
                     }
 
                     let formattedContacts = sub.info.contact;
-                    // Исправлена логика замены ссылок для лучшего отображения
                     formattedContacts = formattedContacts.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, '<a href="mailto:$1">$1</a>');
                     formattedContacts = formattedContacts.replace(/(https?:\/\/[^\s,]+)/gi, '<a href="$1" target="_blank">VK</a>');
 
@@ -747,7 +743,6 @@ function renderReportTable() {
 function toggleSemesterVisibility(block, header) {
     const list = block.querySelector('.semester-list');
     
-    // Переключение класса для анимации стрелки
     if (list.style.display === 'none') {
         list.style.display = 'block';
         header.classList.add('active');
@@ -779,7 +774,6 @@ function navigateTo(stepId) {
     }
     
     updateNavUI();
-    // Скролл наверх при переходе
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -821,3 +815,4 @@ updateNavUI();
 </body>
 
 </html>
+
