@@ -693,7 +693,7 @@ function renderReportTable() {
                 gradeSpan.className = 'grade';
                 
                 if (sub.isMissing) {
-                    gradeSpan.textContent = "Нет предмета";
+                    gradeSpan.textContent = "Отсутствует предмет в зачётке";
                     gradeSpan.classList.add('missing');
                 } else {
                     gradeSpan.textContent = sub.grade;
@@ -819,4 +819,5 @@ updateNavUI();
 </script>
 
 </body>
+
 </html>
