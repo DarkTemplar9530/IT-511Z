@@ -654,8 +654,19 @@ function toggleTheme() {
 initTheme();
 
 function parseXML(xmlString) {
+    // ИСПРАВЛЕНИЕ ДЛЯ iOS: Удаляем BOM (\ufeff) и пробелы в начале строки
+    xmlString = xmlString.trim();
+
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+    
+    // Проверка на ошибки парсинга (полезно для отладки)
+    const parserError = xmlDoc.getElementsByTagName("parsererror");
+    if (parserError.length > 0) {
+        console.error("Ошибка парсинга XML:", parserError[0].textContent);
+        return {};
+    }
+
     const grades = {};
     const groups1 = xmlDoc.getElementsByTagName("table1_Group1");
     for (let i = 0; i < groups1.length; i++) {
@@ -1060,4 +1071,3 @@ updateNavUI();
 </script>
 </body>
 </html>
-
