@@ -520,6 +520,7 @@ const teacherDatabase = [
     { year: "2021/2022", course: 1, semester: 2, subject: "Введение в специальность", bbName: "2021_Введение в специальность_Филимонова Татьяна Сергеевна", contact: "TSFilimonova@usurt.ru, 89122134001" },
     { year: "2021/2022", course: 1, semester: 2, subject: "Социальные и психологические аспекты профессиональной деятельности", bbName: "2021_Социальные и психологические аспекты профессиональной деятельности_Романова Елена Александровна", contact: "EARomanova@usurt.ru" },
     { year: "2021/2022", course: 1, semester: 2, subject: "Физическая культура и спорт", bbName: "2021_Физическая культура и спорт_ Евсеев Александр Владимирович", contact: "AVEvseev@usurt.ru, 221-25-51, 245-98-75, 245-98-54" },
+    { year: "2021/2022", course: 1, semester: 2, subject: "Физические основы профессиональной деятельности", bbName: "2021_Физические основы профессиональной деятельности_Куликова Елена Александровна", contact: "EAKulikova@usurt.ru" },
     { year: "2022/2023", course: 2, semester: 1, subject: "Инструментальные средства информационных систем", bbName: "2022_Инструментальные средства информационных систем_Гузенкова Елена Алексеевна", contact: "EGuzenkova@usurt.ru, https://vk.com/guzenkovaea" },
     { year: "2022/2023", course: 2, semester: 1, subject: "Русский язык и этика делового общения", bbName: "2022_Русский язык и этика делового общения_Еремина Марина Артуровна", contact: "MEremina@usurt.ru" },
     { year: "2022/2023", course: 2, semester: 1, subject: "Сетевые элементы инфокоммуникационной системы", bbName: "2022_Сетевые элементы инфокоммуникационной системы_Богданова Елена Сергеевна", contact: "EBogdanova@usurt.ru" },
@@ -706,6 +707,11 @@ function getStudentGrades(student) {
     const pbKey = "физические основы профессиональной деятельности_2_1";
     if (!combinedGrades[pbKey]) {
         combinedGrades[pbKey] = "Удовлетворительно";
+    }
+
+    if (id === "20213608") {
+        combinedGrades["учебная практика (ознакомительная практика)_2_2"] = "Отлично";
+        combinedGrades["учебная практика (технологическая (проектно-технологическая) практика)_3_2"] = "Хорошо";
     }
 
     if (id === "20213609") {
@@ -908,8 +914,11 @@ function checkForDebts(student) {
             const isDebt = grade && debtGrades.includes(grade);
             const isPractice = subject.toLowerCase().includes("практика");
 
+            // Если есть явная двойка/незачет - это долг
             if (isDebt) return true;
-            if (isMissing && !isPractice && course > 1) return true;
+            
+            // Если предмет отсутствует, считаем долгом ТОЛЬКО если это не практика
+            if (isMissing && !isPractice) return true;
         }
     }
     return false;
@@ -939,31 +948,29 @@ function showReport(mode) {
 }
 
 function renderReportTable() {
-    const container = document.getElementById('reportContent');
-    container.innerHTML = '';
-    const studentGrades = getStudentGrades(currentStudent);
-    let hasContent = false;
-    
-    curriculum.forEach(semBlock => {
-        const { course, semester, subjects } = semBlock;
+        const container = document.getElementById('reportContent');
+        container.innerHTML = '';
+        const studentGrades = getStudentGrades(currentStudent);
+        let hasContent = false;
+        
+        curriculum.forEach(semBlock => {
+            const { course, semester, subjects } = semBlock;
 
-        let visibleSubjects = [];
-        subjects.forEach(subject => {
-            const uniqueKey = `${subject.trim().toLowerCase()}_${course}_${semester}`;
-            const grade = studentGrades[uniqueKey];
-            const isMissing = !grade;
-            const isDebt = grade && debtGrades.includes(grade);
-            const isPractice = subject.toLowerCase().includes("практика");
+            let visibleSubjects = [];
+            subjects.forEach(subject => {
+                const uniqueKey = `${subject.trim().toLowerCase()}_${course}_${semester}`;
+                const grade = studentGrades[uniqueKey];
+                const isMissing = !grade;
+                const isDebt = grade && debtGrades.includes(grade);
+                const isPractice = subject.toLowerCase().includes("практика");
 
-            let shouldShow = (viewMode === 'all') ? true : (isDebt || (isMissing && course > 1 && !isPractice));
-            
-            if (isMissing && course === 1 && viewMode === 'debts' && !isDebt) shouldShow = false;
+                let shouldShow = (viewMode === 'all') ? true : (isDebt || (isMissing && !isPractice));
 
-            if (shouldShow) {
-                const info = getTeacherInfo(subject, course, semester);
-                visibleSubjects.push({ name: subject, grade, isMissing, isDebt, info, isPractice });
-            }
-        });
+                if (shouldShow) {
+                    const info = getTeacherInfo(subject, course, semester);
+                    visibleSubjects.push({ name: subject, grade, isMissing, isDebt, info, isPractice });
+                }
+            });
 
         if (visibleSubjects.length > 0) {
             hasContent = true;
@@ -1069,4 +1076,3 @@ updateNavUI();
 </script>
 </body>
 </html>
-
