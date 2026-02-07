@@ -948,42 +948,46 @@ function showReport(mode) {
 }
 
 function renderReportTable() {
-        const container = document.getElementById('reportContent');
-        container.innerHTML = '';
-        const studentGrades = getStudentGrades(currentStudent);
-        let hasContent = false;
-        
-        curriculum.forEach(semBlock => {
-            const { course, semester, subjects } = semBlock;
+    const container = document.getElementById('reportContent');
+    container.innerHTML = '';
+    const studentGrades = getStudentGrades(currentStudent);
+    let hasContent = false;
+    
+    curriculum.forEach(semBlock => {
+        const { course, semester, subjects, year } = semBlock;
 
-            let visibleSubjects = [];
-            subjects.forEach(subject => {
-                const uniqueKey = `${subject.trim().toLowerCase()}_${course}_${semester}`;
-                const grade = studentGrades[uniqueKey];
-                const isMissing = !grade;
-                const isDebt = grade && debtGrades.includes(grade);
-                const isPractice = subject.toLowerCase().includes("практика");
+        let visibleSubjects = [];
+        subjects.forEach(subject => {
+            const uniqueKey = `${subject.trim().toLowerCase()}_${course}_${semester}`;
+            const grade = studentGrades[uniqueKey];
+            const isMissing = !grade;
+            const isDebt = grade && debtGrades.includes(grade);
+            const isPractice = subject.toLowerCase().includes("практика");
 
-                let shouldShow = (viewMode === 'all') ? true : (isDebt || (isMissing && !isPractice));
+            let shouldShow = (viewMode === 'all') ? true : (isDebt || (isMissing && !isPractice));
 
-                if (shouldShow) {
-                    const info = getTeacherInfo(subject, course, semester);
-                    visibleSubjects.push({ name: subject, grade, isMissing, isDebt, info, isPractice });
-                }
-            });
+            if (shouldShow) {
+                const info = getTeacherInfo(subject, course, semester);
+                visibleSubjects.push({ name: subject, grade, isMissing, isDebt, info, isPractice });
+            }
+        });
 
         if (visibleSubjects.length > 0) {
             hasContent = true;
             const blockDiv = document.createElement('div');
             blockDiv.className = 'semester-block';
+            
             const header = document.createElement('div');
             header.className = 'semester-header active';
-            header.innerHTML = `<span>${course} КУРС, ${semester} СЕМЕСТР</span><svg class="semester-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>`;
+            
+            header.innerHTML = `<span>${course} КУРС, ${semester} СЕМЕСТР (${year})</span><svg class="semester-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>`;
+            
             header.onclick = () => toggleSemesterVisibility(blockDiv, header);
             blockDiv.appendChild(header);
 
             const listDiv = document.createElement('div');
             listDiv.className = 'semester-list';
+            
             visibleSubjects.forEach(sub => {
                 const row = document.createElement('div');
                 row.className = 'subject-row';
@@ -1013,16 +1017,21 @@ function renderReportTable() {
                     const triggerBtn = document.createElement('button');
                     triggerBtn.className = 'info-trigger';
                     triggerBtn.innerHTML = `<svg class="info-arrow" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>`;
+                    
                     const infoPanel = document.createElement('div');
                     infoPanel.className = 'teacher-info-panel';
-                    let teacherName = sub.info.explicitTeacher || (sub.info.bbName ? sub.info.bbName.split('_')[2] : "Не указан");
                     
+                    let teacherName = sub.info.explicitTeacher || (sub.info.bbName ? sub.info.bbName.split('_')[2] : "Не указан");
                     let formattedContacts = sub.info.contact;
+
                     if (!formattedContacts.includes('<a href=')) {
-                         formattedContacts = formattedContacts.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, '<a href="mailto:$1">$1</a>').replace(/(https?:\/\/[^\s,]+)/gi, '<a href="$1" target="_blank">VK</a>');
+                         formattedContacts = formattedContacts
+                            .replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/gi, '<a href="mailto:$1">$1</a>')
+                            .replace(/(https?:\/\/[^\s,]+)/gi, '<a href="$1" target="_blank">VK</a>');
                     }
 
                     infoPanel.innerHTML = `<div class="info-item"><span class="info-label">Курс в BB:</span><div class="info-value">${sub.info.bbName}</div></div><div class="info-item"><span class="info-label">Преподаватель:</span><div class="info-value">${teacherName}</div></div><div class="info-item"><span class="info-label">Контакты:</span><div class="info-value">${formattedContacts}</div></div>`;
+                    
                     triggerBtn.onclick = () => { triggerBtn.classList.toggle('active'); infoPanel.classList.toggle('show'); };
                     row.appendChild(triggerBtn);
                     row.appendChild(infoPanel);
