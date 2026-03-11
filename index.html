@@ -456,6 +456,158 @@
             .subject-name-container { flex: 0 0 55%; max-width: 55%; padding-right: 4px; }
             .grade { flex: 0 0 45%; max-width: 45%; padding-left: 4px; }
         }
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.stat-card {
+    background-color: var(--header-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-title {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+.stat-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.2;
+}
+.stat-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+.chart-section {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+.chart-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-main);
+}
+.bar-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.bar-row:last-child { margin-bottom: 0; }
+.bar-label {
+    width: 80px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.bar-track {
+    flex-grow: 1;
+    height: 12px;
+    background-color: var(--row-border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 0 12px;
+}
+.bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease-out;
+}
+.bar-fill.excellent { background-color: #10b981; }
+.bar-fill.good { background-color: #3b82f6; }
+.bar-fill.satisfactory { background-color: #f59e0b; }
+.bar-fill.passed { background-color: #8b5cf6; }
+.bar-fill.debt { background-color: var(--danger); }
+.bar-value {
+    width: 30px;
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+.trend-wrapper {
+    position: relative;
+    height: 160px;
+    margin-top: 20px;
+    margin-bottom: 16px;
+}
+.grid-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px dashed var(--border);
+    z-index: 1;
+}
+.grid-line span {
+    position: absolute;
+    top: -8px;
+    left: 0;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    background: var(--card-bg);
+    padding-right: 4px;
+    font-weight: 600;
+}
+.grid-line.line-5 { top: 10%; }
+.grid-line.line-4 { top: 40%; }
+.grid-line.line-3 { top: 70%; }
+
+.trend-row {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    height: 100%;
+    margin-left: 24px;
+    border-bottom: 2px solid var(--border);
+}
+.trend-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    position: relative;
+}
+.trend-bar {
+    width: 100%;
+    max-width: 36px;
+    border-radius: 6px 6px 0 0;
+    transition: height 1s ease-out, background-color 0.3s;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.trend-val {
+    font-size: 0.8rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: var(--text-main);
+}
+.trend-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    position: absolute;
+    bottom: -24px;
+    white-space: nowrap;
+}
+@media (max-width: 480px) {
+    .analytics-grid { grid-template-columns: 1fr; }
+}
     </style>
 </head>
 <body>
@@ -500,12 +652,21 @@
         <div id="nameButtonsContainer"></div>
     </div>
 
-    <div id="step-mode" class="step">
+<div id="step-mode" class="step">
         <p class="name-choice-title" id="selectedStudentName"></p>
         <div id="selectedStudentId" class="student-id-display"></div>
         <button class="btn" onclick="showReport('all')">Посмотреть все оценки</button>
         <button id="debtsBtn" class="btn btn-outline" onclick="showReport('debts')">Посмотреть только долги</button>
+        
+        <!-- НОВАЯ КНОПКА -->
+        <button class="btn btn-outline" style="margin-top: 12px; border-color: #10b981; color: #10b981;" onclick="showAnalytics()">Аналитика успеваемости 📊</button>
+        
         <p id="noDebtsMessage" class="no-debts-msg">Долгов нет, вы умничка 🎉</p>
+    </div>
+
+    <!-- НОВЫЙ ШАГ ДЛЯ АНАЛИТИКИ -->
+    <div id="step-analytics" class="step">
+        <div id="analyticsContent"></div>
     </div>
 
     <div id="step-report" class="step">
@@ -943,10 +1104,8 @@ function checkForDebts(student) {
             const isDebt = grade && debtGrades.includes(grade);
             const isPractice = subject.toLowerCase().includes("практика");
 
-            // Если есть явная двойка/незачет - это долг
             if (isDebt) return true;
             
-            // Если предмет отсутствует, считаем долгом ТОЛЬКО если это не практика
             if (isMissing && !isPractice) return true;
         }
     }
@@ -1085,6 +1244,176 @@ function toggleSemesterVisibility(block, header) {
     header.classList.toggle('active', isHidden);
 }
 
+function showAnalytics() {
+    renderAnalytics();
+    navigateTo('step-analytics');
+    
+    setTimeout(() => {
+        document.querySelectorAll('.bar-fill').forEach(bar => {
+            bar.style.width = bar.getAttribute('data-width');
+        });
+        document.querySelectorAll('.trend-bar').forEach(bar => {
+            bar.style.height = bar.getAttribute('data-height');
+        });
+    }, 50);
+}
+
+function renderAnalytics() {
+    const container = document.getElementById('analyticsContent');
+    const grades = getStudentGrades(currentStudent);
+    
+    let sumScore = 0;
+    let countScore = 0;
+    
+    let stats = {
+        'Отлично': 0,
+        'Хорошо': 0,
+        'Удовлетворительно': 0,
+        'Зачтено': 0,
+        'Долги': 0
+    };
+
+    let semesterAverages = {};
+    let latestSemesterIndex = -1; 
+
+    const gradeScores = { "Отлично": 5, "Хорошо": 4, "Удовлетворительно": 3, "Неудовлетворительно": 2, "2": 2 };
+    const passGrades = ["Отлично", "Хорошо", "Удовлетворительно", "Зачтено", "Зачет"];
+
+    curriculum.forEach((semBlock, index) => {
+        semBlock.subjects.forEach(subject => {
+            const uniqueKey = `${subject.trim().toLowerCase()}_${semBlock.course}_${semBlock.semester}`;
+            if (grades[uniqueKey]) {
+                latestSemesterIndex = Math.max(latestSemesterIndex, index);
+            }
+        });
+    });
+
+    let totalSubjectsTaken = 0;
+    let totalPassed = 0;
+
+    if (latestSemesterIndex >= 0) {
+        for (let i = 0; i <= latestSemesterIndex; i++) {
+            const semBlock = curriculum[i];
+            const semKey = `${semBlock.course}-${semBlock.semester}`;
+            let semSum = 0;
+            let semCount = 0;
+
+            semBlock.subjects.forEach(subject => {
+                totalSubjectsTaken++;
+                const uniqueKey = `${subject.trim().toLowerCase()}_${semBlock.course}_${semBlock.semester}`;
+                const rawGrade = grades[uniqueKey];
+                const isPractice = subject.toLowerCase().includes("практика");
+                
+                let effectiveGrade = rawGrade;
+
+                if (!rawGrade) {
+                    if (isPractice) {
+                        effectiveGrade = "Зачтено";
+                    } else {
+                        effectiveGrade = "Отсутствует";
+                    }
+                } else if (rawGrade === "Зачет") {
+                    effectiveGrade = "Зачтено";
+                }
+
+                if (effectiveGrade === "Отлично") stats['Отлично']++;
+                else if (effectiveGrade === "Хорошо") stats['Хорошо']++;
+                else if (effectiveGrade === "Удовлетворительно") stats['Удовлетворительно']++;
+                else if (effectiveGrade === "Зачтено") stats['Зачтено']++;
+                else if (effectiveGrade === "Отсутствует" || debtGrades.includes(rawGrade)) stats['Долги']++;
+
+                if (effectiveGrade && gradeScores[effectiveGrade]) {
+                    sumScore += gradeScores[effectiveGrade];
+                    countScore++;
+                    semSum += gradeScores[effectiveGrade];
+                    semCount++;
+                }
+
+                if (passGrades.includes(effectiveGrade)) {
+                    totalPassed++;
+                }
+            });
+
+            if (semCount > 0) {
+                semesterAverages[semKey] = (semSum / semCount).toFixed(2);
+            }
+        }
+    }
+
+    const averageScore = countScore > 0 ? (sumScore / countScore).toFixed(2) : "0.00";
+    const progressPercent = totalSubjectsTaken > 0 ? Math.round((totalPassed / totalSubjectsTaken) * 100) : 0;
+    const maxStat = Math.max(...Object.values(stats), 1);
+
+    let html = `
+        <div class="analytics-grid">
+            <div class="stat-card">
+                <div class="stat-title">Средний балл</div>
+                <div class="stat-value">${averageScore}</div>
+                <div class="stat-desc">По 5-балльной шкале</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Прогресс</div>
+                <div class="stat-value">${progressPercent}%</div>
+                <div class="stat-desc">Сдано ${totalPassed} из ${totalSubjectsTaken}</div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-title">Распределение оценок</div>
+            ${createBarRow('Отлично', stats['Отлично'], maxStat, 'excellent')}
+            ${createBarRow('Хорошо', stats['Хорошо'], maxStat, 'good')}
+            ${createBarRow('Удовл.', stats['Удовлетворительно'], maxStat, 'satisfactory')}
+            ${createBarRow('Зачтено', stats['Зачтено'], maxStat, 'passed')}
+            ${stats['Долги'] > 0 ? createBarRow('Долги', stats['Долги'], maxStat, 'debt') : ''}
+        </div>
+    `;
+
+    if (Object.keys(semesterAverages).length > 1) {
+        html += `
+            <div class="chart-section" style="padding-bottom: 32px;">
+                <div class="chart-title">Динамика среднего балла</div>
+                <div class="trend-wrapper">
+                    <div class="grid-line line-5"><span>5.0</span></div>
+                    <div class="grid-line line-4"><span>4.0</span></div>
+                    <div class="grid-line line-3"><span>3.0</span></div>
+                    <div class="trend-row">
+        `;
+        
+        for (const [sem, avg] of Object.entries(semesterAverages)) {
+            const heightPct = Math.max(((avg - 2) / 3) * 90, 5); 
+            
+            let color = 'var(--primary)';
+            if (avg >= 4.5) color = '#10b981';
+            else if (avg >= 3.5) color = '#3b82f6';
+            else color = '#f59e0b';
+            
+            html += `
+                <div class="trend-col">
+                    <span class="trend-val">${avg}</span>
+                    <div class="trend-bar" style="height: 0%; background-color: ${color};" data-height="${heightPct}%"></div>
+                    <span class="trend-label">${sem}</span>
+                </div>
+            `;
+        }
+        
+        html += `</div></div></div>`;
+    }
+
+    container.innerHTML = html;
+}
+function createBarRow(label, value, max, colorClass) {
+    const width = Math.round((value / max) * 100);
+    return `
+        <div class="bar-row">
+            <div class="bar-label">${label}</div>
+            <div class="bar-track">
+                <!-- Изначально ширина 0%, реальная ширина сохранена в data-width -->
+                <div class="bar-fill ${colorClass}" style="width: 0%" data-width="${width}%"></div>
+            </div>
+            <div class="bar-value">${value}</div>
+        </div>
+    `;
+}
 function navigateTo(stepId) {
     document.querySelector('.step.active').classList.remove('active');
     document.getElementById(stepId).classList.add('active');
